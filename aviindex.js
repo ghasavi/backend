@@ -3,6 +3,7 @@ import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
 import aviproductRouter from './routes/aviproductRouter.js';
 import aviuserRouter from './routes/aviuserRouter.js';
+import aviorderRouter from './routes/aviorderRouter.js';
 import jwt from 'jsonwebtoken';
 
 
@@ -49,6 +50,7 @@ mongoose.connect("mongodb+srv://admin:123@cluster0.oypseuu.mongodb.net/?retryWri
 
 app.use("/products" , aviproductRouter)
 app.use("/users" , aviuserRouter)
+app.use("/orders" , aviorderRouter)
 
 // Start server
 app.listen(5000, 

@@ -1,11 +1,13 @@
 import express from 'express';
 
-import {deleteProduct, getProducts, saveProduct} from "../controllers/aviproductController.js";
+import {deleteProduct, getProductById, getProducts, saveProduct , updateProduct} from "../controllers/aviproductController.js";
 
 const productRouter = express.Router();
 
 productRouter.get("/", getProducts);
 productRouter.post("/", saveProduct);
-productRouter.delete("/:productId" , deleteProduct)
+productRouter.delete("/:productId" , deleteProduct);
+productRouter.put("/:productId", updateProduct);
+productRouter.get("/:productId", getProductById);
 
 export default productRouter;
