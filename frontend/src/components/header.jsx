@@ -1,7 +1,7 @@
 import UserData from './aviuserData.jsx';
 
 export default function Header() {
-    console.log("Header compnonent loading...")
+    console.log("Header component loading...")
     return (
         <div className="bg-red-500 text-white p-4">
             <h1 className ="text-[80px]">Beauty syndrome</h1>
