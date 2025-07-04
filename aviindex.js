@@ -53,7 +53,7 @@ mongoose.connect(process.env.MONGODB_URL)
     console.log("Database connection failed")
 })
 
-app.use("/products" , aviproductRouter)
+app.use("/api/products" , aviproductRouter)
 app.use("/users" , aviuserRouter)
 app.use("/orders" , aviorderRouter)
 
