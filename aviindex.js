@@ -4,11 +4,16 @@ import mongoose from 'mongoose';
 import aviproductRouter from './routes/aviproductRouter.js';
 import aviuserRouter from './routes/aviuserRouter.js';
 import aviorderRouter from './routes/aviorderRouter.js';
+import cors from 'cors';
 import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 
 const app = express();
 
+app.use(cors())
 // Middleware to parse JSON
 app.use(bodyParser.json());
 
@@ -18,7 +23,7 @@ app.use((req,res,next)=>{
         const token = tokenString.replace("Bearer" ,"")
   
 
-    jwt.verify(token, "cbc-ITP-project@2025" , 
+    jwt.verify(token, process.env.JWT_KEY, 
         (err,decoded)=>{
             if(decoded != null){
                 req.user = decoded
@@ -40,7 +45,7 @@ app.use((req,res,next)=>{
 
 })
 
-mongoose.connect("mongodb+srv://admin:123@cluster0.oypseuu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+mongoose.connect(process.env.MONGODB_URL)
 .then(()=>{
     console.log("Connect to the database")
 }

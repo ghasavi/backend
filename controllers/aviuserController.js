@@ -69,7 +69,7 @@ export function createUser(req,res){
                                 role : user.role,
                                 img : user.img,
                             },
-                            "cbc-ITP-project@2025"
+                            process.env.JWT_KEY
                         );
 
 
