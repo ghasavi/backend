@@ -73,10 +73,12 @@ export function createUser(req,res){
                         );
 
 
-                            res.json({
-                                message : "Login successful",
-                                token : token
+                        res.json({
+                            message : "Login successful",
+                            token : token,
+                            role: user.role // 👈 send role back!
                             })
+
                         }else{
                             res.status(403).json({
                                 message : "Invalid password"

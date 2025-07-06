@@ -1,21 +1,19 @@
 import express from 'express';
-import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
-import aviproductRouter from './routes/aviproductRouter.js';
-import aviuserRouter from './routes/aviuserRouter.js';
-import aviorderRouter from './routes/aviorderRouter.js';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-
 const app = express();
 
-app.use(cors())
-// Middleware to parse JSON
-app.use(bodyParser.json());
+app.use(cors());
+app.use(express.json());
+
+import aviproductRouter from './routes/aviproductRouter.js';
+import aviuserRouter from './routes/aviuserRouter.js';
+import aviorderRouter from './routes/aviorderRouter.js';
 
 app.use((req,res,next)=>{
     const tokenString = req.header("Authorization")
@@ -54,8 +52,8 @@ mongoose.connect(process.env.MONGODB_URL)
 })
 
 app.use("/api/products" , aviproductRouter)
-app.use("/users" , aviuserRouter)
-app.use("/orders" , aviorderRouter)
+app.use("/api/users" , aviuserRouter)
+app.use("/api/orders" , aviorderRouter)
 
 // Start server
 app.listen(5000, 
