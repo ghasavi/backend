@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const orderSchema = new mongoose.Schema({
+const orderSchema = mongoose.Schema({
     orderId : {
         type : String,
         required : true,
@@ -25,7 +25,7 @@ const orderSchema = new mongoose.Schema({
     status : {
         type : String,
         required : true,
-        default : "Pending"
+        default : "pending"
     },
     labelledTotal : {
         type : Number,
@@ -35,47 +35,48 @@ const orderSchema = new mongoose.Schema({
         type : Number,
         required : true
     },
-    products : [{
-        productInfo : {
-            productId : {
-                type : String,
-                required : true
+    products : [
+        {
+            productInfo : {
+                productId : {
+                    type : String,
+                    required : true
+                },
+                name : {
+                    type : String,
+                    required : true
+                },
+                altNames : [{
+                    type : String
+                }],
+                description : {
+                    type : String,
+                    required : true
+                },
+                images : [{
+                    type : String
+                }],
+                labelledPrice : {
+                    type : Number,
+                    required : true
+                },
+                price : {
+                    type : Number,
+                    required : true
+                }
             },
-            name : {
-                type : String,
-                required : true
-            },
-            altName : {
-                type : [String],
-                required : true
-            },
-            description : {
-                type : String,
-                required : true
-            },
-            images : {
-                type : [String],
-                required : true
-            },
-            labelledPrice : {
+            quantity : {
                 type : Number,
                 required : true
             },
-            price : {
-                type : Number,
-                required : true
-            },
-        },
-        quantity : {
-            type : Number,
-            required : true
-        },
-    }],
+        }
+    ],
     date : {
         type : Date,
         default : Date.now
     }
+
 })
 
-const Order = mongoose.model("orders", orderSchema);
-export default Order;
+const Order = mongoose.model("orders", orderSchema)
+export default Order
