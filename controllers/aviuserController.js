@@ -167,12 +167,12 @@ const transport = nodemailer.createTransport({
     port: 587,
     secure: false,
     auth: {
-        user: "malithdilshan27@gmail.com",
-        pass: "javyzfzydwsdrmbg"
+        user: "ghasavindya@gmail.com",
+        pass: "eaxigdnqxthjffbi"
     }
 })
 export async function sendOTP(req,res){
-    //javy zfzy dwsd rmbg
+    //eaxi gdnq xthj ffbi
     const randomOTP = Math.floor(100000 + Math.random() * 900000);
     const email = req.body.email;
     if(email == null){

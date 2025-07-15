@@ -3,21 +3,15 @@ import { isAdmin } from "./aviuserController.js";
 
 export async function getProducts(req,res){
 
-    try{
-        if(isAdmin(req)){
-            const products = await Product.find()
-            res.json(products)
-        }else{
-            const products = await Product.find({isAvailable : true})
-            res.json(products)
-        }
-        
-    }catch(err){
-        res.json({
-            message: "Failed to get products",
-            error: err
-        })
-    }
+   try {
+		const products = await Product.find();
+		res.json(products);
+	} catch (err) {
+		res.status(500).json({
+			message: "Failed to get products",
+			error: err
+		});
+	}
 }
 
 export function saveProduct(req, res){

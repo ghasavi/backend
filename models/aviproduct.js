@@ -11,7 +11,7 @@ const productSchema = mongoose.Schema(
         required : true,
         description : true
     },
-    altName : [
+    altNames : [
         {type : String}
     ],
     description : {
@@ -34,9 +34,12 @@ const productSchema = mongoose.Schema(
         required : true,
         default : true
     },
+    isAvailable: {
+    type: Boolean,
+    default: true 
 
     }
-);
+});
 
 const Product = mongoose.model("products",productSchema)
 
