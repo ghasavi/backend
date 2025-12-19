@@ -288,3 +288,46 @@ export function isAdmin(req){
     }
     return true
 }
+
+export async function getAllUsers(req, res) {
+	if (!isAdmin(req)) {
+		return res.status(403).json({
+			message: "Admin access only",
+		});
+	}
+
+	try {
+		const users = await User.find().select("-password");
+		res.json(users);
+	} catch (e) {
+		res.status(500).json({
+			message: "Failed to fetch users",
+			error: e,
+		});
+	}
+}
+
+
+export async function toggleBlockUser(req, res) {
+	if (!isAdmin(req)) {
+		return res.status(403).json({ message: "Admin access only" });
+	}
+
+	const userId = req.params.userId;
+	const block = req.body.block; // true = block, false = unblock
+
+	try {
+		const user = await User.findById(userId);
+		if (!user) {
+			return res.status(404).json({ message: "User not found" });
+		}
+
+		user.isBlock = block;
+		await user.save();
+
+		res.json({ message: `User has been ${block ? "blocked" : "unblocked"}` });
+	} catch (e) {
+		res.status(500).json({ message: "Failed to update user status", error: e });
+	}
+}
+

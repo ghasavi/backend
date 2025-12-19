@@ -161,3 +161,35 @@ export async function updateOrderStatus(req,res){
 	
 	
 }
+
+export async function deleteOrder(req, res) {
+	if (!isAdmin(req)) {
+		res.status(403).json({
+			message: "You are not authorized to delete orders",
+		});
+		return;
+	}
+
+	try {
+		const orderId = req.params.orderId;
+
+		const deletedOrder = await Order.findOneAndDelete({
+			orderId: orderId,
+		});
+
+		if (!deletedOrder) {
+			return res.status(404).json({
+				message: "Order not found",
+			});
+		}
+
+		res.json({
+			message: "Order deleted successfully",
+		});
+	} catch (e) {
+		res.status(500).json({
+			message: "Failed to delete order",
+			error: e,
+		});
+	}
+}
