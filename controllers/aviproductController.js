@@ -1,152 +1,191 @@
 import Product from "../models/aviproduct.js";
 import { isAdmin } from "./aviuserController.js";
 
-export async function getProducts(req,res){
-
-   try {
-		const products = await Product.find();
-		res.json(products);
-	} catch (err) {
-		res.status(500).json({
-			message: "Failed to get products",
-			error: err
-		});
-	}
+/* =========================
+   GET ALL PRODUCTS
+========================= */
+export async function getProducts(req, res) {
+  try {
+    const products = await Product.find();
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to get products",
+      error: err,
+    });
+  }
 }
 
-export function saveProduct(req, res){
+/* =========================
+   SAVE PRODUCT (FIXED)
+========================= */
+export async function saveProduct(req, res) {
+  if (!isAdmin(req)) {
+    return res.status(403).json({
+      message: "You are not authorized to add a product",
+    });
+  }
 
-    if(!isAdmin(req)){
-        res.status(403).json({
-            message: "You are not authorized to add a product"
-        })
-        return
+  try {
+    const {
+      productId,
+      name,
+      altNames,
+      description,
+      images,
+      labelledPrice,
+      price,
+      stock,
+      size,
+      medium,
+      material,
+      year,
+    } = req.body;
+
+    if (!images || images.length === 0) {
+      return res.status(400).json({
+        message: "At least one image is required",
+      });
     }
 
-    const product = new Product(
-        req.body
+    const product = new Product({
+      productId,
+      name,
+      altNames,
+      description,
+      displayImage: images[0], // ⭐ FIRST IMAGE = DISPLAY IMAGE
+      images,
+      labelledPrice,
+      price,
+      stock,
+      size,
+      medium,
+      material,
+      year,
+    });
+
+    await product.save();
+
+    res.status(201).json({
+      message: "Product added successfully",
+      product,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to add product",
+      error: err.message,
+    });
+  }
+}
+
+/* =========================
+   DELETE PRODUCT
+========================= */
+export async function deleteProduct(req, res) {
+  if (!isAdmin(req)) {
+    return res.status(403).json({
+      message: "You are not authorized to delete a product",
+    });
+  }
+
+  try {
+    await Product.deleteOne({ productId: req.params.productId });
+    res.json({
+      message: "Product deleted successfully",
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to delete product",
+      error: err,
+    });
+  }
+}
+
+/* =========================
+   UPDATE PRODUCT
+========================= */
+export async function updateProduct(req, res) {
+  if (!isAdmin(req)) {
+    return res.status(403).json({
+      message: "You are not authorized to update a product",
+    });
+  }
+
+  const productId = req.params.productId;
+  const updatingData = req.body;
+
+  try {
+    // If images updated, refresh displayImage too
+    if (updatingData.images && updatingData.images.length > 0) {
+      updatingData.displayImage = updatingData.images[0];
+    }
+
+    await Product.updateOne(
+      { productId },
+      updatingData
     );
 
-    product
-        .save()
-        .then(() => {
-            res.json({
-                message: "Product added successfully",
-            });
-        })
-        .catch(() => {
-            res.json({
-                message: "Failed to add product",
-            });
-        }
-    );
+    res.json({
+      message: "Product updated successfully",
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Internal server error",
+      error: err,
+    });
+  }
 }
 
-export async function deleteProduct(req,res){
-    
-    if(!isAdmin(req)){
-        res.status(403).json({
-            message: "You are not authorized to delete a product"
-        })
-        return
-    }
-    try{
-        await Product.deleteOne({productId : req.params.productId})
+/* =========================
+   GET PRODUCT BY ID
+========================= */
+export async function getProductById(req, res) {
+  const productId = req.params.productId;
 
-        res.json({
-            message : "Product deleted successfully"
-        })
-    }catch(err){
-        res.status(500).json({
-            message : "Failed to delete product",
-            error : err
-        })
-    }    
+  try {
+    const product = await Product.findOne({ productId });
+
+    if (!product) {
+      return res.status(404).json({
+        message: "Product not found",
+      });
+    }
+
+    if (!product.isAvailable && !isAdmin(req)) {
+      return res.status(404).json({
+        message: "Product not found",
+      });
+    }
+
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({
+      message: "Internal server error",
+      error: err,
+    });
+  }
 }
 
-export async function updateProduct(req,res){
-    if(!isAdmin(req)){
-        res.status(403).json({
-            message: "You are not authorized to update a product"
-        })
-        return
-    }
+/* =========================
+   SEARCH PRODUCTS
+========================= */
+export async function searchProducts(req, res) {
+  const searchQuery = req.params.query;
 
-    const productId = req.params.productId
-    const updatingData = req.body
+  try {
+    const products = await Product.find({
+      isAvailable: true,
+      $or: [
+        { name: { $regex: searchQuery, $options: "i" } },
+        { altNames: { $elemMatch: { $regex: searchQuery, $options: "i" } } },
+      ],
+    });
 
-    try{
-        await Product.updateOne(
-            {productId : productId},
-            updatingData
-        )
-
-        res.json(
-            {
-                message : "Product updated successfully"
-            }
-        )
-
-    }catch(err){
-        res.status(500).json({
-            message : "Internal server error",
-            error : err
-        })
-    }
-}
-
-export async function getProductById(req,res){
-    const productId = req.params.productId
-    
-    try{
-
-        const product = await Product.findOne(
-            {productId : productId}
-        )
-
-        if(product == null){
-            res.status(404).json({
-                message : "Product not found"
-            })
-            return
-        }
-        if(product.isAvailable){
-            res.json(product)
-        }else{
-            if(!isAdmin(req)){
-                res.status(404).json({
-                    message : "Product not found"
-                })
-                return
-            }else{
-                res.json(product)
-            }
-        }
-
-    }catch(err){
-        res.status(500).json({
-            message : "Internal server error",
-            error : err
-        })
-    }
-
-
-}
-export async function searchProducts(req,res){
-    const searchQuery = req.params.query
-    try{
-        const products = await Product.find({
-            $or:[
-                {name :  {$regex : searchQuery, $options : "i"}},
-                {altNames : {$elemMatch : {$regex : searchQuery, $options : "i"}}}
-            ],
-            isAvailable : true
-        })
-        res.json(products)
-    }catch(err){
-        res.status(500).json({
-            message : "Internal server error",
-            error : err
-        })
-    }
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({
+      message: "Internal server error",
+      error: err,
+    });
+  }
 }

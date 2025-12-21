@@ -16,19 +16,19 @@ export async function createOrder(req, res) {
 		orderInfo.name = req.user.firstName + " " + req.user.lastName;
 	}
 
-	//CBC00001
-	let orderId = "CBC00001";
+	//PXA00001
+	let orderId = "PXA00001";
 
 	const lastOrder = await Order.find().sort({ date: -1 }).limit(1);
 	//[]
 	if (lastOrder.length > 0) {
-		const lastOrderId = lastOrder[0].orderId; //"CBC00551"
+		const lastOrderId = lastOrder[0].orderId; //"PXA00551"
 
-		const lastOrderNumberString = lastOrderId.replace("CBC", ""); //"00551"
+		const lastOrderNumberString = lastOrderId.replace("PXA", ""); //"00551"
 		const lastOrderNumber = parseInt(lastOrderNumberString); //551
 		const newOrderNumber = lastOrderNumber + 1; //552
 		const newOrderNumberString = String(newOrderNumber).padStart(5, "0");
-		orderId = "CBC" + newOrderNumberString; //"CBC00552"
+		orderId = "PXA" + newOrderNumberString; //"PXA00552"
 	}
 	try {
 		let total = 0;
