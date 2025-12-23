@@ -331,3 +331,40 @@ export async function toggleBlockUser(req, res) {
 	}
 }
 
+export async function getMe(req, res) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Fetch the full user from DB, not just JWT payload
+    const user = await User.findOne({ email: req.user.email }).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(user);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+}
+
+export async function updateMe(req, res) {
+  try {
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { firstName, lastName, img } = req.body;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      { firstName, lastName, img },
+      { new: true }
+    ).select("-password");
+
+    res.json({ message: "Profile updated successfully", user: updatedUser });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to update profile", error: err.message });
+  }
+}
