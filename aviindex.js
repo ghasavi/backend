@@ -5,6 +5,7 @@ import productRouter from './routes/aviproductRouter.js';
 import userRouter from './routes/aviuserRouter.js';
 import jwt from 'jsonwebtoken';
 import orderRouter from './routes/aviorderRouter.js';
+import paymentRouter from "./routes/paymentRouter.js";
 import cors from 'cors';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -51,6 +52,7 @@ mongoose.connect(process.env.MONGODB_URL)
 app.use("/api/products", productRouter)
 app.use("/api/users",userRouter)
 app.use("/api/orders",orderRouter)
+app.use("/api/payment", paymentRouter);
 
 
 app.listen( 5000, 
