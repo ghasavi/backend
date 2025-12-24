@@ -1,3 +1,4 @@
+import multer from "multer";
 import User from "../models/aviuser.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -27,8 +28,7 @@ export function createUser(req,res){
     const hashedPassword = bcrypt.hashSync(req.body.password, 10)
 
     const user = new User({
-        firstName : req.body.firstName,
-        lastName : req.body.lastName,
+        username : req.body.username,
         email : req.body.email,
         password : hashedPassword,
         role : req.body.role,
@@ -66,8 +66,7 @@ export function loginUser(req,res){
                     const token = jwt.sign(
                         {
                             email : user.email,
-                            firstName : user.firstName,
-                            lastName : user.lastName,
+                            username : user.username,
                             role : user.role,
                             img : user.img
                         },
@@ -117,8 +116,7 @@ export async function loginWithGoogle(req,res){
         const newUser = new User(
             {
                 email: response.data.email,
-                firstName: response.data.given_name,
-                lastName: response.data.family_name,
+               username: response.data.name,
                 password: "googleUser",
                 img: response.data.picture 
             }
@@ -127,8 +125,7 @@ export async function loginWithGoogle(req,res){
         const token = jwt.sign(
             {
                 email: newUser.email,
-                firstName: newUser.firstName,
-                lastName: newUser.lastName,
+                username: newUser.username,
                 role: newUser.role,
                 img: newUser.img
             },
@@ -145,8 +142,7 @@ export async function loginWithGoogle(req,res){
         const token = jwt.sign(
             {
                 email: user.email,
-                firstName: user.firstName,
-                lastName: user.lastName,
+                username: user.username,
                 role: user.role,
                 img: user.img
             },
@@ -350,21 +346,32 @@ export async function getMe(req, res) {
   }
 }
 
+// Multer setup for file upload
+const storage = multer.memoryStorage();
+export const upload = multer({ storage });
+
+// Update profile
 export async function updateMe(req, res) {
   try {
     if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
-    const { firstName, lastName, img } = req.body;
+    const { username } = req.body;
+    if (!username) return res.status(400).json({ message: "Username is required" });
+
+    let img = req.user.img; 
+    if (req.file) {
+      img = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+    }
 
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
-      { firstName, lastName, img },
+      { username, img },
       { new: true }
     ).select("-password");
 
     res.json({ message: "Profile updated successfully", user: updatedUser });
   } catch (err) {
-    console.error(err);
+    console.error("UPDATE ME ERROR:", err);
     res.status(500).json({ message: "Failed to update profile", error: err.message });
   }
 }
