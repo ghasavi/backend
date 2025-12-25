@@ -1,24 +1,64 @@
 import express from "express";
 import multer from "multer";
-import { createUser, getUser, loginUser, loginWithGoogle, resetPassword, sendOTP ,getAllUsers ,toggleBlockUser} from "../controllers/aviuserController.js";
-import { getMe , updateMe} from "../controllers/aviuserController.js";
+import {
+  createUser,
+  getUser,
+  loginUser,
+  loginWithGoogle,
+  resetPassword,
+  sendOTP,
+  getAllUsers,
+  toggleBlockUser,
+  getMe,
+  updateMe
+} from "../controllers/aviuserController.js";
+import { authenticateJWT } from "../middlewares/authMiddleware.js";
 
 const userRouter = express.Router();
+
+// Multer setup
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-userRouter.post("/",createUser)
-userRouter.post("/login", loginUser)
-userRouter.post("/login/google", loginWithGoogle)
-userRouter.post("/send-otp", sendOTP)
-userRouter.post("/reset-password", resetPassword)
-userRouter.get("/", getUser)
-userRouter.get("/all", getAllUsers);
-userRouter.get("/me", getMe);
-// Only one username + avatar
-userRouter.put("/me", upload.single("avatar"), updateMe);
+// =================== Public Routes ===================
+// Only admins can create users
+userRouter.post("/", authenticateJWT, async (req, res, next) => {
+  if (req.user.role !== "admin") return res.status(403).json({ message: "Admin access only" });
+  next();
+}, createUser);
 
-// Add this at the end:
-userRouter.put("/block/:userId", toggleBlockUser);
+userRouter.post("/login", loginUser);
+userRouter.post("/login/google", loginWithGoogle);
+userRouter.post("/send-otp", sendOTP);
+userRouter.post("/reset-password", resetPassword);
+
+// =================== Protected Routes ===================
+// All protected routes require login and not blocked
+const protectedRoute = (handler) => [
+  authenticateJWT,
+  (req, res, next) => {
+    if (req.user.isBlock) return res.status(403).json({ message: "Your account is blocked" });
+    next();
+  },
+  handler
+];
+
+userRouter.get("/me", ...protectedRoute(getMe));
+userRouter.put("/me", ...protectedRoute(upload.single("avatar"), updateMe));
+userRouter.get("/", ...protectedRoute(getUser));
+
+// =================== Admin Routes ===================
+const adminRoute = (handler) => [
+  authenticateJWT,
+  (req, res, next) => {
+    if (req.user.isBlock) return res.status(403).json({ message: "Your account is blocked" });
+    if (req.user.role !== "admin") return res.status(403).json({ message: "Admin access only" });
+    next();
+  },
+  handler
+];
+
+userRouter.get("/all", ...adminRoute(getAllUsers));
+userRouter.put("/block/:userId", ...adminRoute(toggleBlockUser));
 
 export default userRouter;
