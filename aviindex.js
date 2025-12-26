@@ -17,8 +17,21 @@ import User from "./models/aviuser.js";
 dotenv.config();
 const app = express();
 
+// ----------------------
 // Middleware
-app.use(cors());
+// ----------------------
+
+// CORS setup (must be BEFORE routes)
+app.use(cors({
+  origin: [
+    "http://localhost:5173", // local frontend
+    "https://56dcb3654f14.ngrok-free.app" // ngrok frontend URL
+  ],
+  methods: ["GET","POST","PUT","DELETE","OPTIONS"],
+  credentials: true
+}));
+
+// Body parser
 app.use(bodyParser.json());
 
 // JWT Middleware: attach full user to req.user
@@ -40,19 +53,32 @@ app.use(async (req, res, next) => {
   }
 });
 
-// Connect to MongoDB
+// ----------------------
+// MongoDB Connection
+// ----------------------
 mongoose
   .connect(process.env.MONGODB_URL)
   .then(() => console.log("Connected to the database"))
   .catch((err) => console.error("Database connection failed:", err));
 
+// ----------------------
 // Routes
+// ----------------------
 app.use("/api/products", productRouter);
 app.use("/api/users", userRouter);
 app.use("/api/orders", orderRouter);
 app.use("/api/payment", paymentRouter);
 
+// ----------------------
+// Error handling fallback
+// ----------------------
+app.use((req, res) => {
+  res.status(404).json({ message: "API route not found" });
+});
+
+// ----------------------
 // Start server
+// ----------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

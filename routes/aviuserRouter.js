@@ -20,8 +20,7 @@ const userRouter = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// =================== Public Routes ===================
-// Only admins can create users
+// ---------------- PUBLIC ROUTES ----------------
 userRouter.post("/", authenticateJWT, async (req, res, next) => {
   if (req.user.role !== "admin") return res.status(403).json({ message: "Admin access only" });
   next();
@@ -32,8 +31,7 @@ userRouter.post("/login/google", loginWithGoogle);
 userRouter.post("/send-otp", sendOTP);
 userRouter.post("/reset-password", resetPassword);
 
-// =================== Protected Routes ===================
-// All protected routes require login and not blocked
+// ---------------- PROTECTED ROUTES ----------------
 const protectedRoute = (handler) => [
   authenticateJWT,
   (req, res, next) => {
@@ -47,7 +45,7 @@ userRouter.get("/me", ...protectedRoute(getMe));
 userRouter.put("/me", ...protectedRoute(upload.single("avatar"), updateMe));
 userRouter.get("/", ...protectedRoute(getUser));
 
-// =================== Admin Routes ===================
+// ---------------- ADMIN ROUTES ----------------
 const adminRoute = (handler) => [
   authenticateJWT,
   (req, res, next) => {
@@ -60,5 +58,13 @@ const adminRoute = (handler) => [
 
 userRouter.get("/all", ...adminRoute(getAllUsers));
 userRouter.put("/block/:userId", ...adminRoute(toggleBlockUser));
+
+// ---------------- ADMIN CHECK ROUTE ----------------
+userRouter.get("/check-admin", authenticateJWT, (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ message: "Admin access only" });
+  }
+  res.json({ ok: true, user: req.user });
+});
 
 export default userRouter;
