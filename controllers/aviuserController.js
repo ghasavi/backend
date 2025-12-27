@@ -193,20 +193,18 @@ export async function getMe(req, res) {
 export async function updateMe(req, res) {
   if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
-  const { username } = req.body;
+  const { username, avatar } = req.body;
   if (!username) return res.status(400).json({ message: "Username is required" });
-
-  let img = req.user.img;
-  if (req.file) img = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
 
   const updatedUser = await User.findByIdAndUpdate(
     req.user._id,
-    { username, img },
+    { username, img: avatar },
     { new: true }
   ).select("-password");
 
   res.json({ message: "Profile updated successfully", user: updatedUser });
 }
+
 
 // =================== Admin Helpers ===================
 export function isAdmin(req) {
@@ -228,4 +226,38 @@ export async function toggleBlockUser(req, res) {
   user.isBlock = req.body.block;
   await user.save();
   res.json({ message: `User has been ${req.body.block ? "blocked" : "unblocked"}` });
+}
+
+// Get logged-in user's cart
+export async function getCart(req, res) {
+  if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+  const user = await User.findById(req.user._id).select("cart");
+  res.json(user.cart || []);
+}
+
+// Update cart (replace whole cart)
+export async function updateCart(req, res) {
+  if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+  const { cart } = req.body;
+  if (!Array.isArray(cart)) return res.status(400).json({ message: "Invalid cart data" });
+
+  const updatedUser = await User.findByIdAndUpdate(
+    req.user._id,
+    { cart },
+    { new: true }
+  ).select("cart");
+
+  res.json(updatedUser.cart);
+}
+
+// Remove purchased items
+export async function removePurchasedItems(req, res) {
+  if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+  const { productIds } = req.body; // array of purchased productIds
+  if (!Array.isArray(productIds)) return res.status(400).json({ message: "Invalid product IDs" });
+
+  const user = await User.findById(req.user._id);
+  user.cart = user.cart.filter(item => !productIds.includes(item.productId));
+  await user.save();
+  res.json(user.cart);
 }

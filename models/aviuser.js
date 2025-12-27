@@ -29,6 +29,16 @@ const userSchema = mongoose.Schema({
         required : false,
         default : ""
     },
+    cart: [
+        {
+            productId: { type: String, required: true },
+            name: { type: String, required: true },
+            image: { type: String, required: true },
+            price: { type: Number, required: true },
+            labelledPrice: { type: Number },
+            qty: { type: Number, default: 1 }
+        }
+    ]
     
 },{ timestamps: true });
 
