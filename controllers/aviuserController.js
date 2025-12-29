@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import axios from "axios";
-import nodemailer from "nodemailer";
+import transporter from "../utils/mailer.js";
 import OTP from "../models/otp.js";
 
 dotenv.config();
@@ -122,13 +122,6 @@ export async function loginWithGoogle(req, res) {
 }
 
 // =================== OTP & Password Reset ===================
-const transport = nodemailer.createTransport({
-  service: "gmail",
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: { user: "ghasavindya@gmail.com", pass: "eaxigdnqxthjffbi" }, // replace with your credentials
-});
 
 export async function sendOTP(req, res) {
   try {
@@ -140,23 +133,24 @@ export async function sendOTP(req, res) {
 
     await OTP.deleteMany({ email });
 
-    const randomOTP = Math.floor(100000 + Math.random() * 900000);
-    const otpDoc = new OTP({ email, otp: randomOTP });
-    await otpDoc.save();
+    const otp = Math.floor(100000 + Math.random() * 900000);
 
-    await transport.sendMail({
-      from: "malithdilshan27@gmail.com",
+    await OTP.create({ email, otp });
+
+    await transporter.sendMail({
+      from: process.env.EMAIL,
       to: email,
-      subject: "Password reset OTP",
-      text: `Your OTP for password reset is: ${randomOTP}`,
+      subject: "Password Reset OTP",
+      text: `Your OTP is ${otp}. It will expire soon.`,
     });
 
-    res.json({ message: "OTP sent successfully", otp: randomOTP });
+    res.json({ message: "OTP sent successfully" });
   } catch (err) {
     console.error("SEND OTP ERROR:", err);
-    res.status(500).json({ message: "Failed to send OTP", error: err.message });
+    res.status(500).json({ message: "Failed to send OTP" });
   }
 }
+
 
 export async function resetPassword(req, res) {
   try {

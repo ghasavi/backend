@@ -1,8 +1,10 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
 import cors from "cors";
-import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 
 // Routes
@@ -14,7 +16,6 @@ import paymentRouter from "./routes/paymentRouter.js";
 // Models
 import User from "./models/aviuser.js";
 
-dotenv.config();
 const app = express();
 
 // ----------------------
