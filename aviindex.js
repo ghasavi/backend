@@ -12,6 +12,7 @@ import productRouter from "./routes/aviproductRouter.js";
 import userRouter from "./routes/aviuserRouter.js";
 import orderRouter from "./routes/aviorderRouter.js";
 import paymentRouter from "./routes/paymentRouter.js";
+import reviewRouter from "./routes/avireviewRouter.js";
 
 // Models
 import User from "./models/aviuser.js";
@@ -69,6 +70,7 @@ app.use("/api/products", productRouter);
 app.use("/api/users", userRouter);
 app.use("/api/orders", orderRouter);
 app.use("/api/payment", paymentRouter);
+app.use("/api/reviews", reviewRouter);
 
 // ----------------------
 // Error handling fallback

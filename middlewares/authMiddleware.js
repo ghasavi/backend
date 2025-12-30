@@ -20,3 +20,13 @@ export const authenticateJWT = (req, res, next) => {
     return res.status(403).json({ message: "Forbidden: Invalid token" });
   }
 };
+
+// Only allow admin users
+export const admin = (req, res, next) => {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({ message: "Not authorized as admin" });
+  }
+  next();
+};
+
+
