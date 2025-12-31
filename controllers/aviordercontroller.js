@@ -4,60 +4,68 @@ import { isAdmin } from "./aviuserController.js";
 
 export async function createOrder(req, res) {
 	if (req.user == null) {
-		res.status(403).json({
+		return res.status(403).json({
 			message: "Please login and try again",
 		});
-		return;
 	}
 
 	const orderInfo = req.body;
 
-	if (orderInfo.name == null) {
+	if (!orderInfo.name) {
 		orderInfo.name = req.user.firstName + " " + req.user.lastName;
 	}
 
-	//PXA00001
+	// Generate Order ID
 	let orderId = "PXA00001";
-
 	const lastOrder = await Order.find().sort({ date: -1 }).limit(1);
-	//[]
-	if (lastOrder.length > 0) {
-		const lastOrderId = lastOrder[0].orderId; //"PXA00551"
 
-		const lastOrderNumberString = lastOrderId.replace("PXA", ""); //"00551"
-		const lastOrderNumber = parseInt(lastOrderNumberString); //551
-		const newOrderNumber = lastOrderNumber + 1; //552
-		const newOrderNumberString = String(newOrderNumber).padStart(5, "0");
-		orderId = "PXA" + newOrderNumberString; //"PXA00552"
+	if (lastOrder.length > 0) {
+		const lastOrderNumber = parseInt(lastOrder[0].orderId.replace("PXA", ""));
+		orderId = "PXA" + String(lastOrderNumber + 1).padStart(5, "0");
 	}
+
 	try {
 		let total = 0;
 		let labelledTotal = 0;
 		const products = [];
 
 		for (let i = 0; i < orderInfo.products.length; i++) {
+			const cartItem = orderInfo.products[i];
+
 			const item = await Product.findOne({
-				productId: orderInfo.products[i].productId,
+				productId: cartItem.productId,
 			});
-			if (item == null) {
-				res.status(404).json({
-					message:
-						"Product with productId " +
-						orderInfo.products[i].productId +
-						" not found",
+
+			if (!item) {
+				return res.status(404).json({
+					message: `Product ${cartItem.productId} not found`,
 				});
-				return;
 			}
-			if (item.isAvailable == false) {
-				res.status(404).json({
-					message:
-						"Product with productId " +
-						orderInfo.products[i].productId +
-						" is not available right now!",
+
+			if (!item.isAvailable) {
+				return res.status(400).json({
+					message: `${item.name} is not available right now`,
 				});
-				return;
 			}
-			products[i] = {
+
+			// 🚨 STOCK CHECK
+			if (item.stock < cartItem.qty) {
+				return res.status(400).json({
+					message: `Only ${item.stock} left for ${item.name}`,
+				});
+			}
+
+			// 🔥 REDUCE STOCK
+			item.stock -= cartItem.qty;
+
+			if (item.stock === 0) {
+				item.isAvailable = false;
+			}
+
+			await item.save();
+
+			// Snapshot product info
+			products.push({
 				productInfo: {
 					productId: item.productId,
 					name: item.name,
@@ -67,40 +75,40 @@ export async function createOrder(req, res) {
 					labelledPrice: item.labelledPrice,
 					price: item.price,
 				},
-				quantity: orderInfo.products[i].qty,
-			};
-			//total = total + (item.price * orderInfo.products[i].quantity)
-			total += item.price * orderInfo.products[i].qty;
-			//labelledTotal = labelledTotal + (item.labelledPrice * orderInfo.products[i].quantity)
-			labelledTotal += item.labelledPrice * orderInfo.products[i].qty;
+				quantity: cartItem.qty,
+			});
+
+			total += item.price * cartItem.qty;
+			labelledTotal += item.labelledPrice * cartItem.qty;
 		}
 
 		const order = new Order({
-			orderId: orderId,
+			orderId,
 			email: req.user.email,
 			name: orderInfo.name,
 			address: orderInfo.address,
-			
 			phone: orderInfo.phone,
-			products: products,
-			labelledTotal: labelledTotal,
-			total: total,
+			products,
+			labelledTotal,
+			total,
+			status: "paid",
 		});
+
 		const createdOrder = await order.save();
+
 		res.json({
-			message: "Order created successfully",
+			message: "Order created successfully & stock updated",
 			order: createdOrder,
 		});
 	} catch (err) {
+		console.error(err);
 		res.status(500).json({
 			message: "Failed to create order",
 			error: err,
 		});
 	}
-	//add current users name if not provided
-	//orderId generate
-	//create order object
 }
+
 export async function getOrders(req, res) {
 	if (req.user == null) {
 		res.status(403).json({
