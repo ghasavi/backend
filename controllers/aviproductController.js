@@ -115,14 +115,9 @@ export async function updateProduct(req, res) {
   const updatingData = req.body;
 
   try {
-    // If images updated, refresh displayImage too
-    if (updatingData.images && updatingData.images.length > 0) {
-      updatingData.displayImage = updatingData.images[0];
-    }
-
     await Product.updateOne(
       { productId },
-      updatingData
+      { $set: updatingData }
     );
 
     res.json({
@@ -131,10 +126,11 @@ export async function updateProduct(req, res) {
   } catch (err) {
     res.status(500).json({
       message: "Internal server error",
-      error: err,
+      error: err.message,
     });
   }
 }
+
 
 /* =========================
    GET PRODUCT BY ID
