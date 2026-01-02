@@ -33,6 +33,7 @@ export async function saveProduct(req, res) {
       altNames,
       description,
       images,
+      displayImage,
       labelledPrice,
       price,
       stock,
@@ -41,6 +42,12 @@ export async function saveProduct(req, res) {
       material,
       year,
     } = req.body;
+
+    if (!displayImage) {
+  return res.status(400).json({
+    message: "Display image is required",
+  });
+}
 
     if (!images || images.length === 0) {
       return res.status(400).json({
@@ -53,7 +60,7 @@ export async function saveProduct(req, res) {
       name,
       altNames,
       description,
-      displayImage: images[0], // ⭐ FIRST IMAGE = DISPLAY IMAGE
+      displayImage,
       images,
       labelledPrice,
       price,
