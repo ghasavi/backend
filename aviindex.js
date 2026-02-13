@@ -28,8 +28,8 @@ app.use(cors({
   origin: [
     "http://localhost:5173", // local frontend
     "https://56dcb3654f14.ngrok-free.app", // ngrok frontend URL
-    "https://frontend-lyart-six-71.vercel.app",
-    "https://frontend-six-chi-15.vercel.app"
+    "https://frontend-six-chi-15.vercel.app",// Vercel frontend URL
+    
   ],
   methods: ["GET","POST","PUT","DELETE","OPTIONS"],
   credentials: true
